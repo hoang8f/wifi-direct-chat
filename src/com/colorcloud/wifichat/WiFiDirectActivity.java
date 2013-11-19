@@ -17,11 +17,21 @@
 package com.colorcloud.wifichat;
 
 import static com.colorcloud.wifichat.Constants.*;
+import jade.android.AgentContainerHandler;
+import jade.android.AgentHandler;
+import jade.android.RuntimeCallback;
+import jade.android.RuntimeService;
+import jade.android.RuntimeServiceBinder;
+import jade.wrapper.AgentController;
+import jade.wrapper.StaleProxyException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -29,6 +39,7 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
@@ -37,6 +48,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.colorcloud.agent.MainContainerInterface;
+import com.colorcloud.agent.ManagerAgent;
 import com.colorcloud.wifichat.DeviceListFragment.DeviceActionListener;
 import com.colorcloud.wifichat.WiFiDirectApp.PTPLog;
 
@@ -47,7 +60,7 @@ import com.colorcloud.wifichat.WiFiDirectApp.PTPLog;
  * The application should also register a BroadcastReceiver for notification of
  * WiFi state related events.
  */
-public class WiFiDirectActivity extends Activity implements DeviceActionListener {
+public class WiFiDirectActivity extends Activity implements DeviceActionListener,MainContainerInterface {
 
     public static final String TAG = "PTP_Activity";
     
@@ -55,6 +68,12 @@ public class WiFiDirectActivity extends Activity implements DeviceActionListener
 
     boolean mHasFocus = false;
     private boolean retryChannel = false;
+    
+    //jade agent
+    private RuntimeServiceBinder runtimeServiceBinder;
+    private AgentContainerHandler mainContainerHandler;
+    private ServiceConnection serviceConnection;
+    private AgentController mManagerAgentController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -170,10 +189,107 @@ public class WiFiDirectActivity extends Activity implements DeviceActionListener
     		@Override public void run() {
     			DeviceDetailFragment fragmentDetails = (DeviceDetailFragment) getFragmentManager().findFragmentById(R.id.frag_detail);
     			fragmentDetails.onConnectionInfoAvailable(info);
+    			//Start main container here
+    			bindService();
     		}
     	});
     }
+    
+    /**
+     * Create JADE Main Container here
+     */
+    public void bindService() {
+        //Check runtime service
+        if (runtimeServiceBinder == null) {
+            //Create Runtime Service Binder here
+            serviceConnection = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName componentName, IBinder service) {
+                    runtimeServiceBinder = (RuntimeServiceBinder) service;
+                    Log.i(TAG, "@@@Gateway successfully bound to RuntimeService");
+                    startMainContainer();
+                }
 
+                @Override
+                public void onServiceDisconnected(ComponentName componentName) {
+                    Log.i(TAG, "@@@Gateway unbound from RuntimeService");
+                }
+            };
+            Log.i(TAG, "@@@Binding Gateway to RuntimeService...");
+            bindService(new Intent(getApplicationContext(), RuntimeService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+        } else {
+            startMainContainer();
+        }
+    }
+    
+    private void startMainContainer() {
+    	if (mainContainerHandler == null) {
+	        runtimeServiceBinder.createMainAgentContainer(new RuntimeCallback<AgentContainerHandler>() {
+	            @Override
+	            public void onSuccess(AgentContainerHandler agentContainerHandler) {
+	                mainContainerHandler = agentContainerHandler;
+	                Log.i(TAG, "@@@Main-Container created...");
+	                Log.i(TAG, "@@@Container:" + agentContainerHandler.getAgentContainer().getName());
+	                Log.i(TAG, "@@@mainContainerHandler:" + mainContainerHandler);
+	                //Create Manager agent if it is not existed
+	                createAgent("manager", ManagerAgent.class.getName());
+	            }
+	
+	            @Override
+	            public void onFailure(Throwable throwable) {
+	                Log.i(TAG, "@@@Failed to create Main Container");
+	            }
+	        });
+    	} else {
+            Toast.makeText(this, "main-container already existed", Toast.LENGTH_SHORT).show();
+    	}
+    }
+    
+
+    private void createAgent(String name, String className) {
+        if (mainContainerHandler != null) {
+            mainContainerHandler.createNewAgent(name, className, new Object[]{WiFiDirectActivity.this}, new RuntimeCallback<AgentHandler>() {
+                @Override
+                public void onSuccess(AgentHandler agentHandler) {
+                    try {
+                        Log.i(TAG, "@@@Success to create agent: " + agentHandler.getAgentController().getName());
+                        mManagerAgentController = agentHandler.getAgentController();
+                        mManagerAgentController.start();
+                    } catch (StaleProxyException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+                    Log.i(TAG, "@@@Failed to created an Agent");
+                    throwable.printStackTrace();
+                }
+            });
+
+        } else {
+            Toast.makeText(this, "manager agent already existed", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void stopMainContainer() {
+    	mainContainerHandler.kill(new RuntimeCallback<Void>() {
+
+			@Override
+			public void onFailure(Throwable arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onSuccess(Void arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+    }
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	super.onCreateOptionsMenu(menu);

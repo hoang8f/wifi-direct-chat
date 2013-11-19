@@ -180,6 +180,7 @@ public class DeviceDetailFragment extends Fragment {
         	PTPLog.d(TAG,  "onConnectionInfoAvailable : connect to serve failed...try again ! ");
         }else{
         	// hide the connect button and enable start chat button
+        	// Connect success, create main container and manager here
         	mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
         	mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
         	PTPLog.d(TAG, "onConnectionInfoAvailable: socket connection established, show start chat button ! ");

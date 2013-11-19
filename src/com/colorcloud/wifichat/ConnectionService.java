@@ -284,9 +284,10 @@ public class ConnectionService extends Service implements ChannelListener, PeerL
         	break;
         case MSG_STARTCLIENT:
         	PTPLog.d(TAG, "processMessage: startClientSelector...");
-        	if( mConnMan.startClientSelector((String)msg.obj) >= 0){
+        	//TODO
+//        	if( mConnMan.startClientSelector((String)msg.obj) >= 0){
         		enableStartChatActivity();
-        	}
+//        	}
         	break;
         case MSG_NEW_CLIENT:
         	PTPLog.d(TAG, "processMessage:  onNewClient...");
