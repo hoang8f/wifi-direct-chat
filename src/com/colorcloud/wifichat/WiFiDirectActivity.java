@@ -204,10 +204,10 @@ public class WiFiDirectActivity extends Activity implements DeviceActionListener
                 }
                 return true;
             case R.id.atn_direct_discover:
-                if( !mApp.isP2pEnabled() ){
-                    Toast.makeText(WiFiDirectActivity.this, R.string.p2p_off_warning, Toast.LENGTH_LONG).show();
-                    return true;
-                }
+//                if( !mApp.isP2pEnabled() ){
+//                    Toast.makeText(WiFiDirectActivity.this, R.string.p2p_off_warning, Toast.LENGTH_LONG).show();
+//                    return true;
+//                }
 
                 // show progressbar when discoverying.
                 final DeviceListFragment fragment = (DeviceListFragment) getFragmentManager().findFragmentById(R.id.frag_list);
