@@ -174,17 +174,18 @@ public class DeviceDetailFragment extends Fragment {
         	Log.d(TAG, "onConnectionInfoAvailable: device is client, connect to group owner: startSocketClient done ");
             ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources().getString(R.string.client_text));
         }
-        
-        if( ! mApp.mIsServer && mApp.mMyAddr == null ){
-        	Toast.makeText(mApp, "Connect to Server Failed, Please try again...", Toast.LENGTH_LONG).show();
-        	PTPLog.d(TAG,  "onConnectionInfoAvailable : connect to serve failed...try again ! ");
-        }else{
+        //TODO
+//        if( ! mApp.mIsServer && mApp.mMyAddr == null ){
+//        	Toast.makeText(mApp, "Connect to Server Failed, Please try again...", Toast.LENGTH_LONG).show();
+//        	PTPLog.d(TAG,  "onConnectionInfoAvailable : connect to serve failed...try again ! ");
+//        }
+//        else{
         	// hide the connect button and enable start chat button
         	// Connect success, create main container and manager here
         	mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
         	mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
         	PTPLog.d(TAG, "onConnectionInfoAvailable: socket connection established, show start chat button ! ");
-        }
+//        }
     }
 
     /**

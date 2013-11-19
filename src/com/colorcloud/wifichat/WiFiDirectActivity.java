@@ -50,6 +50,7 @@ import android.widget.Toast;
 
 import com.colorcloud.agent.MainContainerInterface;
 import com.colorcloud.agent.ManagerAgent;
+import com.colorcloud.agent.ManagerInterface;
 import com.colorcloud.wifichat.DeviceListFragment.DeviceActionListener;
 import com.colorcloud.wifichat.WiFiDirectApp.PTPLog;
 
@@ -74,6 +75,7 @@ public class WiFiDirectActivity extends Activity implements DeviceActionListener
     private AgentContainerHandler mainContainerHandler;
     private ServiceConnection serviceConnection;
     private AgentController mManagerAgentController;
+    private WifiP2pInfo mInfo;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -110,6 +112,8 @@ public class WiFiDirectActivity extends Activity implements DeviceActionListener
             	// XXX stop client, if any.
             }
         }
+        //Try to send message to other manager
+        sendMessageToManager();
     }
 
     @Override
@@ -189,6 +193,7 @@ public class WiFiDirectActivity extends Activity implements DeviceActionListener
     		@Override public void run() {
     			DeviceDetailFragment fragmentDetails = (DeviceDetailFragment) getFragmentManager().findFragmentById(R.id.frag_detail);
     			fragmentDetails.onConnectionInfoAvailable(info);
+    			mInfo = info;
     			//Start main container here
     			bindService();
     		}
@@ -255,8 +260,11 @@ public class WiFiDirectActivity extends Activity implements DeviceActionListener
                         Log.i(TAG, "@@@Success to create agent: " + agentHandler.getAgentController().getName());
                         mManagerAgentController = agentHandler.getAgentController();
                         mManagerAgentController.start();
+                        sendMessageToManager();
+                        Log.i(TAG, "@@@end ");
                     } catch (StaleProxyException e) {
                         e.printStackTrace();
+                        Log.i(TAG, "exception:" + ((e != null) ? e.getMessage() :""));
                     }
                 }
 
@@ -270,6 +278,26 @@ public class WiFiDirectActivity extends Activity implements DeviceActionListener
         } else {
             Toast.makeText(this, "manager agent already existed", Toast.LENGTH_SHORT).show();
         }
+    }
+    
+    private void sendMessageToManager() {
+    	if (mInfo != null && mManagerAgentController != null) {
+    		try {
+    			ManagerInterface managerInterface = mManagerAgentController.getO2AInterface(ManagerInterface.class);
+    		    if (managerInterface != null) {
+    		    	Log.i(TAG, "@@@!null");
+    		    	managerInterface.sendMessageToOtherManager(mInfo); 
+    		    } else {
+                    Log.i(TAG, "@@@null");
+    		    	Toast.makeText(this, "ManagerInterface == null", Toast.LENGTH_SHORT).show();
+    		    }
+			} catch (StaleProxyException e) {
+				e.printStackTrace();
+				Toast.makeText(this, "Exception: Can not send message to other manager", Toast.LENGTH_SHORT).show();
+			}
+    	} else {
+    		Toast.makeText(this, "Can not send message to manager", Toast.LENGTH_SHORT).show();
+    	}
     }
 
     @Override

@@ -1,20 +1,24 @@
 package com.colorcloud.agent;
 
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.util.Log;
+import com.colorcloud.wifichat.WifiDirectUtils;
 
 import jade.content.lang.Codec;
 import jade.content.lang.sl.SLCodec;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
-import jade.util.Logger;
 import jade.util.leap.Set;
 import jade.util.leap.SortedSetImpl;
+import android.content.Context;
+import android.content.Intent;
+import android.net.wifi.p2p.WifiP2pInfo;
+import android.os.Message;
+import android.util.Log;
+import android.widget.Toast;
 
-public class ManagerAgent extends Agent implements ChatInterface {
+public class ManagerAgent extends Agent implements ManagerInterface {
 
     private static final String TAG = "ReceivedMessage";
     private static final long serialVersionUID = 1594371294421614291L;
@@ -22,7 +26,7 @@ public class ManagerAgent extends Agent implements ChatInterface {
     private Codec codec = new SLCodec();
     private Context context;
     private String ipAddress = "133.19.63.184";
-    private String agentName = "android-agent";
+    private String agentName = "manager";
 
     protected void setup() {
         Object[] args = getArguments();
@@ -32,32 +36,20 @@ public class ManagerAgent extends Agent implements ChatInterface {
             }
         }
 
-        // Add initial behaviours
-//        addBehaviour(new ParticipantsManager(this));
-
         // Activate the GUI
-        registerO2AInterface(ChatInterface.class, this);
+        registerO2AInterface(ManagerInterface.class, this);
+        addBehaviour(new ParticipantsManager(this));
 
         Intent broadcast = new Intent();
         broadcast.setAction("jade.demo.agent.SEND_MESSAGE");
         Log.i(TAG, "@@@Sending broadcast " + broadcast.getAction());
         context.sendBroadcast(broadcast);
-
-        //Get ipAddress and agentName
-        /*
-        SharedPreferences sharedPreferences = context.getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
-        ipAddress = sharedPreferences.getString(Constants.PREFS_HOST_ADDRESS, ipAddress);
-        agentName = sharedPreferences.getString(Constants.PREFS_AGENT_NAME, agentName);
-        */
     }
-
-    protected void takeDown() {
-    }
-
+    
     class ParticipantsManager extends CyclicBehaviour {
-        private static final long serialVersionUID = -4845730529175649756L;
+		private static final long serialVersionUID = -7712839879652888139L;
 
-        ParticipantsManager(Agent a) {
+		ParticipantsManager(Agent a) {
             super(a);
         }
 
@@ -71,34 +63,62 @@ public class ManagerAgent extends Agent implements ChatInterface {
             if (msg != null) {
                 try {
                     //Get message
-                    String message = msg.getContent();
-                    Log.i(TAG, "@@@Incomming message:" + message);
-
+                    msg.getSender().getAddressesArray();
+                    
+                    WifiDirectUtils.OTHER_DEVICE_ADDRESS = msg.getSender().getLocalName();
+                    Log.d(TAG, "@@@ other device address:" + WifiDirectUtils.OTHER_DEVICE_ADDRESS);
+        			Toast.makeText(context, "Other device ip:" + WifiDirectUtils.OTHER_DEVICE_ADDRESS, Toast.LENGTH_LONG).show();
                 } catch (Exception e) {
-                    Logger.println(e.toString());
                     e.printStackTrace();
                 }
             } else {
                 block();
             }
         }
-    } // END of inner class ParticipantsManager
+    }
+    
+    class OneShotMessage extends OneShotBehaviour {
+		private static final long serialVersionUID = 7197253550536422665L;
+		private String mMessage;
+        private String mAddress;
 
-    public void handleSpoken(String s) {
+        public OneShotMessage(String address) {
+            mAddress = address;
+        }
 
+        @Override
+        public void action() {
+            ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+            message.setLanguage(codec.getName());
+            String convId = "C-" + myAgent.getLocalName();
+            message.setConversationId(convId);
+            message.setContent(mMessage);
+            AID dummyAid = new AID();
+            dummyAid.setName(agentName + "@" + mAddress + ":1099/JADE");
+            dummyAid.addAddresses("http://" + mAddress + ":7778/acc");
+            message.addReceiver(dummyAid);
+            myAgent.send(message);
+            Log.i(TAG, "@@@Send message:" + message.getContent());
+        }
     }
 
-    public String[] getParticipantNames() {
-        String[] pp = new String[participants.size()];
-        return pp;
+    protected void takeDown() {
     }
-
-    public void onHostChanged(String host) {
-        ipAddress = host;
-    }
-
-    public void onAgentNameChanged(String name) {
-        agentName = name;
-    }
-
+    
+	@Override
+	public void sendMessageToOtherManager(WifiP2pInfo info) {
+		Toast.makeText(context, "send message to Other manager", Toast.LENGTH_SHORT).show();
+		Log.d(TAG, "@@@send message to Other manager");
+		if (!info.isGroupOwner) {
+			//Not a group owner
+			addBehaviour(new OneShotMessage(info.groupOwnerAddress.toString().replace("/", "")));
+			//Update other device address
+			WifiDirectUtils.OTHER_DEVICE_ADDRESS = info.groupOwnerAddress.toString().replace("/","");
+			Toast.makeText(context, "Other device ip:" + WifiDirectUtils.OTHER_DEVICE_ADDRESS, Toast.LENGTH_LONG).show();
+		} else {
+			//Group owner
+			//Do nothing, just receiver message to update client ip address
+			Toast.makeText(context, "is group owner", Toast.LENGTH_SHORT).show();
+		}
+	}
 }
