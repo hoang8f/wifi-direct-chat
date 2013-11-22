@@ -63,8 +63,7 @@ public class ManagerAgent extends Agent implements ManagerInterface {
             if (msg != null) {
                 try {
                     //Get message
-                    msg.getSender().getAddressesArray();
-                    
+                    msg.getSender().getName();
                     WifiDirectUtils.OTHER_DEVICE_ADDRESS = msg.getSender().getLocalName();
                     Log.d(TAG, "@@@ other device address:" + WifiDirectUtils.OTHER_DEVICE_ADDRESS);
         			Toast.makeText(context, "Other device ip:" + WifiDirectUtils.OTHER_DEVICE_ADDRESS, Toast.LENGTH_LONG).show();

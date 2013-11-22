@@ -189,7 +189,7 @@ public class ChatFragment extends ListFragment {
 			if ( item.mSender.equals(mApp.mDeviceName )){
 				return VIEW_TYPE_MYMSG;
 			}
-			return VIEW_TYPE_INMSG;			
+			return VIEW_TYPE_INMSG;
 		}
 		
 		/**
