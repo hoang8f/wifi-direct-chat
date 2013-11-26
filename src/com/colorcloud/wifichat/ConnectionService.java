@@ -222,7 +222,7 @@ public class ConnectionService extends Service implements ChannelListener, PeerL
      */
     @Override
     public void onConnectionInfoAvailable(final WifiP2pInfo info) {
-    	Log.d(TAG, "onConnectionInfoAvailable: " + info.groupOwnerAddress.getHostAddress());
+    	Log.d(TAG, "@@@onConnectionInfoAvailable: " + info.groupOwnerAddress.getHostAddress());
         if (info.groupFormed && info.isGroupOwner ) {
 			// XXX server path goes to peer connected.
             //new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
@@ -238,8 +238,9 @@ public class ConnectionService extends Service implements ChannelListener, PeerL
     
     private void enableStartChatActivity() {
     	if( mApp.mHomeActivity != null ){
-			PTPLog.d(TAG, "enableStartChatActivity :  nio channel ready, enable start chat !");
+			PTPLog.d(TAG, "@@@enableStartChatActivity :  nio channel ready, enable start chat !");
 			mApp.mHomeActivity.onConnectionInfoAvailable(mApp.mP2pInfo);
+            mApp.mHomeActivity.onStartMainContainer();
     	}
     }
     

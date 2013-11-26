@@ -18,4 +18,5 @@
     <string name="disconnect">disconnect</string>
     <string name="about">about</string>
     <string name="help">help</string>
+    <string name="label_main_container">MAIN CONTAINER:</string>
 </resources>

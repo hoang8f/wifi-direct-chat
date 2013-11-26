@@ -1,5 +1,6 @@
 package com.colorcloud.agent;
 
 public interface MainContainerInterface {
-	public void stopMainContainer();
+	public void onStopMainContainer();
+    public void onStartMainContainer();
 }
