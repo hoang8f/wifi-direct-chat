@@ -522,6 +522,7 @@ public class WiFiDirectActivity extends Activity implements DeviceActionListener
             @Override
             public void run() {
                 Intent i = mApp.getLauchActivityIntent(MainActivity.class, initMsg);
+                sendMessageToManager();
                 startActivity(i);
             }
         });

@@ -45,7 +45,7 @@ public class AndroidHelper {
 	}
 
 	public static String getLocalIPAddress() {
-		try {
+        try {
 			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
 				NetworkInterface intf = en.nextElement();
 				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
@@ -74,7 +74,6 @@ public class AndroidHelper {
 		} catch (SocketException e) {
 			// Blank
 		}
-
 		return LOOPBACK;
 	}
 }

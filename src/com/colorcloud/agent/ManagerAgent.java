@@ -2,6 +2,7 @@ package com.colorcloud.agent;
 
 import com.colorcloud.wifichat.WifiDirectUtils;
 
+import jade.android.AndroidHelper;
 import jade.content.lang.Codec;
 import jade.content.lang.sl.SLCodec;
 import jade.core.AID;
@@ -17,6 +18,9 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ManagerAgent extends Agent implements ManagerInterface {
 
@@ -63,10 +67,21 @@ public class ManagerAgent extends Agent implements ManagerInterface {
             if (msg != null) {
                 try {
                     //Get message
-                    msg.getSender().getName();
-                    WifiDirectUtils.OTHER_DEVICE_ADDRESS = msg.getSender().getLocalName();
+                    String content = msg.getContent();
+                    if (content == null || "".equals(content)) {
+                        msg.getSender().getName();
+                        String localName = msg.getSender().getName();
+                        if (localName.contains("@") && localName.contains(":")) {
+                            WifiDirectUtils.OTHER_DEVICE_ADDRESS = localName.split(":")[0].split("@")[1];
+                        }
+                        //Start chat fragment
+
+                    } else {
+                        //Show content at chat fragment
+
+                    }
+
                     Log.d(TAG, "@@@ other device address:" + WifiDirectUtils.OTHER_DEVICE_ADDRESS);
-        			Toast.makeText(context, "Other device ip:" + WifiDirectUtils.OTHER_DEVICE_ADDRESS, Toast.LENGTH_LONG).show();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
