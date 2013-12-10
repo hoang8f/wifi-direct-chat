@@ -23,23 +23,16 @@ Boston, MA  02111-1307, USA.
 package jade.imtp.leap.nio;
 
 //#J2ME_EXCLUDE_FILE
-import jade.core.*;
 import jade.core.sam.AverageMeasureProviderImpl;
 import jade.core.sam.CounterValueProvider;
 import jade.core.sam.MeasureProvider;
 import jade.core.sam.SAMHelper;
 import jade.imtp.leap.ICPException;
 import jade.util.Logger;
-import jade.util.ThreadDumpManager;
 import jade.util.leap.Properties;
 import jade.imtp.leap.TransportProtocol;
 import jade.imtp.leap.FrontEndStub;
-import jade.imtp.leap.JICP.*;
 import jade.security.JADESecurityException;
-
-import java.io.*;
-import java.nio.channels.*;
-import java.net.*;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1086,7 +1079,7 @@ public class BEManagementService extends BaseService {
 				}
 			}
 			if (newStuckLMCnt > 0) {
-				myLogger.log(Logger.WARNING, "Full thread dump\n----------------------------------\n"+ThreadDumpManager.dumpAllThreads());
+//				myLogger.log(Logger.WARNING, "Full thread dump\n----------------------------------\n"+ThreadDumpManager.dumpAllThreads());
 			}
 			// 2) Forward the tick to all mediators
 			NIOMediator[] mm = null;
